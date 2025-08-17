@@ -1,7 +1,7 @@
 import Party from './components/Party';
 import Supplier from './components/Supplier';
 import LedgerDetail from './components/LedgerDetail';
-import { DataProvider } from './context/DataContext';
+import { supabase } from './lib/supabase';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -9,26 +9,21 @@ function App() {
     name: string;
     type: 'party' | 'supplier';
   } | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
 
-  const renderCurrentPage = () => {
-    // ... existing renderCurrentPage logic
-  };
+  // Check connection status
+  React.useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { error } = await supabase.from('_health').select('*').limit(1);
+        setIsOnline(!error);
+      } catch {
+        setIsOnline(false);
+      }
+    };
 
-  return (
-    <DataProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
-          {renderCurrentPage()}
-        </Layout>
-        
-        {showLedgerDetail && (
-          <LedgerDetail
-            ledgerName={showLedgerDetail.name}
-            ledgerType={showLedgerDetail.type}
-            onClose={() => setShowLedgerDetail(null)}
-          />
-        )}
-      </div>
-    </DataProvider>
-  );
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 }
