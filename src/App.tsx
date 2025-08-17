@@ -1,7 +1,15 @@
+import React, { useState } from 'react';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import LoadingSlip from './components/LoadingSlip';
+import Memo from './components/Memo';
+import Bills from './components/Bills';
+import Banking from './components/Banking';
+import Ledgers from './components/Ledgers';
+import POD from './components/POD';
 import Party from './components/Party';
 import Supplier from './components/Supplier';
 import LedgerDetail from './components/LedgerDetail';
-import { supabase } from './lib/supabase';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -9,21 +17,51 @@ function App() {
     name: string;
     type: 'party' | 'supplier';
   } | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
 
-  // Check connection status
-  React.useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const { error } = await supabase.from('_health').select('*').limit(1);
-        setIsOnline(!error);
-      } catch {
-        setIsOnline(false);
-      }
-    };
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'loading-slip':
+        return <LoadingSlip />;
+      case 'memo':
+        return <Memo />;
+      case 'bills':
+        return <Bills />;
+      case 'paid-memo':
+        return <Memo />;
+      case 'received-bills':
+        return <Bills />;
+      case 'party':
+        return <Party />;
+      case 'supplier':
+        return <Supplier />;
+      case 'banking':
+        return <Banking />;
+      case 'ledgers':
+        return <Ledgers />;
+      case 'pod':
+        return <POD />;
+      default:
+        return <Dashboard />;
+    }
+  };
 
-    checkConnection();
-    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
+        {renderCurrentPage()}
+      </Layout>
+      
+      {showLedgerDetail && (
+        <LedgerDetail
+          ledgerName={showLedgerDetail.name}
+          ledgerType={showLedgerDetail.type}
+          onClose={() => setShowLedgerDetail(null)}
+        />
+      )}
+    </div>
+  );
 }
+
+export default App;

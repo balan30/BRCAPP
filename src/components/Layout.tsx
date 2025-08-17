@@ -1,67 +1,85 @@
 import React from 'react';
 import { Truck, FileText, Receipt, CreditCard, Users, Building, Archive, Search } from 'lucide-react';
-import ConnectionStatus from './ConnectionStatus';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  currentPage: string;
+  onNavigate: (page: string) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
-  const tabs = [
+const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigate }) => {
+  const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Truck },
-    { id: 'trips', label: 'Trips', icon: FileText },
+    { id: 'loading-slip', label: 'Loading Slip', icon: FileText },
+    { id: 'memo', label: 'Memo', icon: Receipt },
     { id: 'bills', label: 'Bills', icon: Receipt },
-    { id: 'payments', label: 'Payments', icon: CreditCard },
-    { id: 'parties', label: 'Parties', icon: Users },
-    { id: 'branches', label: 'Branches', icon: Building },
-    { id: 'archive', label: 'Archive', icon: Archive },
+    { id: 'paid-memo', label: 'Paid Memo', icon: Receipt },
+    { id: 'received-bills', label: 'Received Bills', icon: Receipt },
+    { id: 'party', label: 'Party', icon: Users },
+    { id: 'supplier', label: 'Supplier', icon: Building },
+    { id: 'banking', label: 'Banking', icon: CreditCard },
+    { id: 'ledgers', label: 'Ledgers', icon: FileText },
+    { id: 'pod', label: 'POD', icon: Archive },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <header className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg">
+        <div className="p-6 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Truck className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">BHAVISHYA ROAD</h1>
+              <p className="text-sm text-gray-600">CARRIERS</p>
+            </div>
+          </div>
+        </div>
+        
+        <nav className="p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => onNavigate(item.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      currentPage === item.id
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <header className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">
               Bhavishya Road Carriers - Logistics Management
             </h2>
-            <div className="flex items-center space-x-4">
-              <ConnectionStatus />
-              <div className="text-xs text-gray-500">
-                {new Date().toLocaleString('en-IN')}
-              </div>
+            <div className="flex items-center space-x-2 text-sm text-green-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>LAN Mode - Real-time Sync Active</span>
             </div>
           </div>
         </header>
-
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+        
+        <main className="flex-1 p-6">
+          {children}
+        </main>
       </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
     </div>
   );
 };
