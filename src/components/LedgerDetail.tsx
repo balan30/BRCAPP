@@ -177,4 +177,4 @@ const LedgerDetail: React.FC<LedgerDetailProps> = ({ ledgerName, ledgerType, onC
   );
 };
 
-export default PODComponent;
+export default LedgerDetail;
