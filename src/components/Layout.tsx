@@ -51,11 +51,6 @@ const BillsComponent: React.FC = () => {
 
   const handleViewBill = (bill: Bill) => {
     setViewingBill(bill);
-  };
-
-  const filteredBills = bills.filter(bill =>
-    bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bill.party.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
