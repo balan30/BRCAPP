@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Receipt, Edit, Download, FileText } from 'lucide-react';
+import { Plus, Receipt, Edit, Download, FileText, Search, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
 import MemoForm from './forms/MemoForm';
+import MemoView from './views/MemoView';
 import { generateMemoPDF } from '../utils/pdfGenerator';
 import type { Memo } from '../types';
 
@@ -9,6 +10,8 @@ const MemoComponent: React.FC = () => {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingMemo, setEditingMemo] = useState<Memo | null>(null);
+  const [viewingMemo, setViewingMemo] = useState<Memo | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleCreateMemo = (memoData: Omit<Memo, 'id' | 'created_at' | 'updated_at'>) => {
     const newMemo: Memo = {
@@ -46,6 +49,15 @@ const MemoComponent: React.FC = () => {
     await generateMemoPDF(memo);
   };
 
+  const handleViewMemo = (memo: Memo) => {
+    setViewingMemo(memo);
+  };
+
+  const filteredMemos = memos.filter(memo =>
+    memo.memo_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    memo.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -70,15 +82,43 @@ const MemoComponent: React.FC = () => {
         />
       )}
 
+      {viewingMemo && (
+        <MemoView
+          memo={viewingMemo}
+          onClose={() => setViewingMemo(null)}
+          onEdit={() => {
+            setEditingMemo(viewingMemo);
+            setViewingMemo(null);
+            setShowForm(true);
+          }}
+        />
+      )}
+
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search by memo number, supplier..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">All Memos</h3>
         </div>
         <div className="overflow-x-auto">
-          {memos.length === 0 ? (
+          {filteredMemos.length === 0 ? (
             <div className="text-center text-gray-500 py-12">
               <Receipt className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No memos found</p>
+              <p>{memos.length === 0 ? 'No memos found' : 'No matching memos found'}</p>
               <p className="text-sm">Create memos from loading slips</p>
             </div>
           ) : (
@@ -109,7 +149,7 @@ const MemoComponent: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {memos.map((memo) => (
+                {filteredMemos.map((memo) => (
                   <tr key={memo.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {memo.memo_number}
@@ -132,8 +172,16 @@ const MemoComponent: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center space-x-2">
                         <button
+                          onClick={() => handleViewMemo(memo)}
+                          className="text-gray-600 hover:text-gray-800"
+                          title="View Memo Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleEditMemo(memo)}
                           className="text-blue-600 hover:text-blue-800"
+                          title="Edit Memo"
                         >
                           <Edit className="w-4 h-4" />
                         </button>

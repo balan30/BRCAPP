@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { generateSlipNumber } from '../../utils/numberGenerator';
+import { formatCurrency } from '../../utils/numberGenerator';
 import type { LoadingSlip } from '../../types';
 
 interface LoadingSlipFormProps {
@@ -10,6 +11,48 @@ interface LoadingSlipFormProps {
 }
 
 const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit, onCancel }) => {
+  // Sample data for autocomplete - in real app, this would come from database
+  const [parties] = useState([
+    'VINAYAKA TRANS SOLUTION', 
+    'PERFECT CARGO MOVERS', 
+    'BRC INFRA', 
+    'ABC LOGISTICS', 
+    'XYZ TRANSPORT',
+    'MAHINDRA LOGISTICS',
+    'BLUE DART EXPRESS',
+    'GATI LIMITED',
+    'VRL LOGISTICS',
+    'TCI EXPRESS'
+  ]);
+  const [suppliers] = useState([
+    'RAJESH TRANSPORT', 
+    'KUMAR LOGISTICS', 
+    'SHAH CARRIERS', 
+    'PATEL TRANSPORT',
+    'SINGH CARRIERS',
+    'GUPTA LOGISTICS',
+    'SHARMA TRANSPORT',
+    'VERMA CARRIERS',
+    'AGARWAL LOGISTICS',
+    'JAIN TRANSPORT'
+  ]);
+  const [vehicles] = useState([
+    'GJ27TG5772', 
+    'DD01S9823', 
+    'MH12AB1234', 
+    'RJ14CD5678',
+    'GJ01AB1234',
+    'MH14CD5678',
+    'DL08EF9012',
+    'KA05GH3456',
+    'TN09IJ7890',
+    'UP16KL2345'
+  ]);
+  
+  const [showPartyDropdown, setShowPartyDropdown] = useState(false);
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+  const [showVehicleDropdown, setShowVehicleDropdown] = useState(false);
+  
   const [formData, setFormData] = useState({
     slip_number: generateSlipNumber(),
     date: new Date().toISOString().split('T')[0],
@@ -64,6 +107,33 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
     }));
   };
 
+  const handlePartySelect = (party: string) => {
+    setFormData(prev => ({ ...prev, party }));
+    setShowPartyDropdown(false);
+  };
+
+  const handleSupplierSelect = (supplier: string) => {
+    setFormData(prev => ({ ...prev, supplier }));
+    setShowSupplierDropdown(false);
+  };
+
+  const handleVehicleSelect = (vehicle: string) => {
+    setFormData(prev => ({ ...prev, vehicle_no: vehicle }));
+    setShowVehicleDropdown(false);
+  };
+
+  const filteredParties = parties.filter(party => 
+    party.toLowerCase().includes(formData.party.toLowerCase())
+  );
+
+  const filteredSuppliers = suppliers.filter(supplier => 
+    supplier.toLowerCase().includes(formData.supplier.toLowerCase())
+  );
+
+  const filteredVehicles = vehicles.filter(vehicle => 
+    vehicle.toLowerCase().includes(formData.vehicle_no.toLowerCase())
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -111,14 +181,34 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Party (M/S)
               </label>
-              <input
-                type="text"
-                name="party"
-                value={formData.party}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="party"
+                  value={formData.party}
+                  onChange={handleInputChange}
+                  onFocus={() => setShowPartyDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowPartyDropdown(false), 200)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Type or select party name"
+                  required
+                />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {showPartyDropdown && filteredParties.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredParties.map((party, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handlePartySelect(party)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                      >
+                        {party}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -127,27 +217,67 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Vehicle No
               </label>
-              <input
-                type="text"
-                name="vehicle_no"
-                value={formData.vehicle_no}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="vehicle_no"
+                  value={formData.vehicle_no}
+                  onChange={handleInputChange}
+                  onFocus={() => setShowVehicleDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowVehicleDropdown(false), 200)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Type or select vehicle number"
+                  required
+                />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {showVehicleDropdown && filteredVehicles.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredVehicles.map((vehicle, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleVehicleSelect(vehicle)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                      >
+                        {vehicle}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Supplier
               </label>
-              <input
-                type="text"
-                name="supplier"
-                value={formData.supplier}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="supplier"
+                  value={formData.supplier}
+                  onChange={handleInputChange}
+                  onFocus={() => setShowSupplierDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowSupplierDropdown(false), 200)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Type or select supplier name"
+                  required
+                />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {showSupplierDropdown && filteredSuppliers.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredSuppliers.map((supplier, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleSupplierSelect(supplier)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                      >
+                        {supplier}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

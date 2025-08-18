@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calculator } from 'lucide-react';
+import { X, Calculator, Edit } from 'lucide-react';
 import { generateMemoNumber, formatCurrency } from '../../utils/numberGenerator';
 import type { LoadingSlip, Memo } from '../../types';
 
@@ -11,6 +11,8 @@ interface MemoFormProps {
 }
 
 const MemoForm: React.FC<MemoFormProps> = ({ loadingSlip, initialData, onSubmit, onCancel }) => {
+  const [isCommissionEditable, setIsCommissionEditable] = useState(true);
+  
   const [formData, setFormData] = useState({
     memo_number: generateMemoNumber(),
     loading_slip_id: loadingSlip?.id || '',
@@ -26,16 +28,22 @@ const MemoForm: React.FC<MemoFormProps> = ({ loadingSlip, initialData, onSubmit,
     advance_payments: [],
   });
 
-  // Calculate commission (6% of freight)
+  // Calculate commission (6% of freight) - but allow manual override
   useEffect(() => {
-    const commission = formData.freight * 0.06;
+    if (!isCommissionEditable) {
+      const commission = formData.freight * 0.06;
+      setFormData(prev => ({ ...prev, commission }));
+    }
+  }, [formData.freight, isCommissionEditable]);
+
+  // Calculate net amount
+  useEffect(() => {
     const netAmount = formData.freight - commission - formData.mamool + formData.detention + formData.extra + formData.rto;
     setFormData(prev => ({
       ...prev,
-      commission,
       net_amount: netAmount,
     }));
-  }, [formData.freight, formData.mamool, formData.detention, formData.extra, formData.rto]);
+  }, [formData.freight, formData.commission, formData.mamool, formData.detention, formData.extra, formData.rto]);
 
   useEffect(() => {
     if (initialData) {
@@ -166,11 +174,21 @@ const MemoForm: React.FC<MemoFormProps> = ({ loadingSlip, initialData, onSubmit,
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Commission (6% Auto-calculated)
+                Commission (₹)
               </label>
-              <div className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                {formatCurrency(formData.commission)}
-              </div>
+              <input
+                type="number"
+                name="commission"
+                value={formData.commission}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                step="0.01"
+                min="0"
+                placeholder="Default: 6% of freight"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Suggested: {formatCurrency(formData.freight * 0.06)} (6% of freight)
+              </p>
             </div>
           </div>
 

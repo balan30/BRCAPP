@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Edit, Download, Receipt, CreditCard } from 'lucide-react';
+import { Plus, FileText, Edit, Download, Receipt, CreditCard, Search, Eye } from 'lucide-react';
 import { generateSlipNumber, formatCurrency } from '../utils/numberGenerator';
 import LoadingSlipForm from './forms/LoadingSlipForm';
 import MemoForm from './forms/MemoForm';
 import BillForm from './forms/BillForm';
 import { generateLoadingSlipPDF } from '../utils/pdfGenerator';
+import LoadingSlipView from './views/LoadingSlipView';
 import type { LoadingSlip } from '../types';
 
 const LoadingSlipComponent: React.FC = () => {
@@ -14,6 +15,8 @@ const LoadingSlipComponent: React.FC = () => {
   const [showMemoForm, setShowMemoForm] = useState(false);
   const [showBillForm, setShowBillForm] = useState(false);
   const [selectedSlip, setSelectedSlip] = useState<LoadingSlip | null>(null);
+  const [viewingSlip, setViewingSlip] = useState<LoadingSlip | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleCreateSlip = (slipData: Omit<LoadingSlip, 'id' | 'created_at' | 'updated_at'>) => {
     const newSlip: LoadingSlip = {
@@ -60,6 +63,19 @@ const LoadingSlipComponent: React.FC = () => {
   const handleDownloadPDF = async (slip: LoadingSlip) => {
     await generateLoadingSlipPDF(slip);
   };
+
+  const handleViewSlip = (slip: LoadingSlip) => {
+    setViewingSlip(slip);
+  };
+
+  const filteredSlips = loadingSlips.filter(slip =>
+    slip.slip_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    slip.party.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    slip.vehicle_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    slip.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    slip.from_location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    slip.to_location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -117,16 +133,44 @@ const LoadingSlipComponent: React.FC = () => {
         />
       )}
 
+      {viewingSlip && (
+        <LoadingSlipView
+          slip={viewingSlip}
+          onClose={() => setViewingSlip(null)}
+          onEdit={() => {
+            setEditingSlip(viewingSlip);
+            setViewingSlip(null);
+            setShowForm(true);
+          }}
+        />
+      )}
+
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search by slip number, party, vehicle, supplier, route..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Loading Slips List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">All Loading Slips</h3>
         </div>
         <div className="overflow-x-auto">
-          {loadingSlips.length === 0 ? (
+          {filteredSlips.length === 0 ? (
             <div className="text-center text-gray-500 py-12">
               <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No loading slips found</p>
+              <p>{loadingSlips.length === 0 ? 'No loading slips found' : 'No matching loading slips found'}</p>
               <p className="text-sm">Create your first loading slip to get started</p>
             </div>
           ) : (
@@ -157,7 +201,7 @@ const LoadingSlipComponent: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {loadingSlips.map((slip) => (
+                {filteredSlips.map((slip) => (
                   <tr key={slip.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {slip.slip_number}
@@ -180,8 +224,16 @@ const LoadingSlipComponent: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center space-x-1">
                         <button
+                          onClick={() => handleViewSlip(slip)}
+                          className="text-gray-600 hover:text-gray-800"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleEditSlip(slip)}
                           className="text-blue-600 hover:text-blue-800"
+                          title="Edit Loading Slip"
                         >
                           <Edit className="w-4 h-4" />
                         </button>

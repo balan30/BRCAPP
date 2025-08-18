@@ -147,6 +147,7 @@ const BillsComponent: React.FC = () => {
                         <button
                           onClick={() => handleEditBill(bill)}
                           className="text-blue-600 hover:text-blue-800"
+                          title="Edit Bill"
                         >
                           <Edit className="w-4 h-4" />
                         </button>

@@ -80,11 +80,13 @@ const LedgersComponent: React.FC = () => {
       {/* Search and Filters */}
       <div className="flex items-center justify-between">
         <div className="flex-1 max-w-md">
+          <div className="relative">
           <input
             type="text"
             placeholder={`Search ${activeTab} ledgers...`}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          </div>
         </div>
         <div className="flex items-center space-x-4">
           <input

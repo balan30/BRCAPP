@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CreditCard } from 'lucide-react';
+import { X, CreditCard, ChevronDown } from 'lucide-react';
 import { formatCurrency } from '../../utils/numberGenerator';
 import type { BankingEntry } from '../../types';
 
@@ -9,6 +9,18 @@ interface BankingFormProps {
 }
 
 const BankingForm: React.FC<BankingFormProps> = ({ onSubmit, onCancel }) => {
+  // Sample existing memo and bill numbers - in real app, fetch from database
+  const [existingMemos] = useState([
+    'MO25081001', 'MO25081002', 'MO25081003', 'MO25081004', 'MO25081005',
+    'MO25081006', 'MO25081007', 'MO25081008', 'MO25081009', 'MO25081010'
+  ]);
+  const [existingBills] = useState([
+    'BL25081001', 'BL25081002', 'BL25081003', 'BL25081004', 'BL25081005',
+    'BL25081006', 'BL25081007', 'BL25081008', 'BL25081009', 'BL25081010'
+  ]);
+  
+  const [showReferenceDropdown, setShowReferenceDropdown] = useState(false);
+  
   const [formData, setFormData] = useState({
     type: 'credit' as 'credit' | 'debit',
     category: 'other' as 'bill_advance' | 'bill_payment' | 'memo_advance' | 'memo_payment' | 'expense' | 'other',
@@ -51,6 +63,24 @@ const BankingForm: React.FC<BankingFormProps> = ({ onSubmit, onCancel }) => {
 
   const needsReference = () => {
     return ['bill_advance', 'bill_payment', 'memo_advance', 'memo_payment'].includes(formData.category);
+  };
+  
+  const getReferenceOptions = () => {
+    if (formData.category.includes('bill')) {
+      return existingBills.filter(bill => 
+        bill.toLowerCase().includes(formData.reference_id.toLowerCase())
+      );
+    } else if (formData.category.includes('memo')) {
+      return existingMemos.filter(memo => 
+        memo.toLowerCase().includes(formData.reference_id.toLowerCase())
+      );
+    }
+    return [];
+  };
+
+  const handleReferenceSelect = (reference: string) => {
+    setFormData(prev => ({ ...prev, reference_id: reference }));
+    setShowReferenceDropdown(false);
   };
 
   return (
@@ -137,15 +167,34 @@ const BankingForm: React.FC<BankingFormProps> = ({ onSubmit, onCancel }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {formData.category.includes('bill') ? 'Bill Number' : 'Memo Number'}
                 </label>
-                <input
-                  type="text"
-                  name="reference_id"
-                  value={formData.reference_id}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={formData.category.includes('bill') ? 'Enter Bill Number' : 'Enter Memo Number'}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="reference_id"
+                    value={formData.reference_id}
+                    onChange={handleInputChange}
+                    onFocus={() => setShowReferenceDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowReferenceDropdown(false), 200)}
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={formData.category.includes('bill') ? 'Type or select Bill Number' : 'Type or select Memo Number'}
+                    required
+                  />
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  {showReferenceDropdown && getReferenceOptions().length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {getReferenceOptions().map((reference, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleReferenceSelect(reference)}
+                          className="w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                        >
+                          {reference}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
