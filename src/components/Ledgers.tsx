@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Truck, Building, Download } from 'lucide-react';
+import { Users, Truck, Building, Download, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
 
 const LedgersComponent: React.FC = () => {
@@ -143,7 +143,7 @@ const LedgersComponent: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center space-x-2">
                       <button className="text-blue-600 hover:text-blue-800">
-                        <Edit className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
                       <button className="text-green-600 hover:text-green-800">
                         <Download className="w-4 h-4" />
@@ -168,7 +168,7 @@ const LedgersComponent: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center space-x-2">
                       <button className="text-blue-600 hover:text-blue-800">
-                        <Edit className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
                       <button className="text-green-600 hover:text-green-800">
                         <Download className="w-4 h-4" />
