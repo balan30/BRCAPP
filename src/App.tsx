@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Layout from './components/Layout';
+import { Layout } from './components/Layout';
 import Dashboard from './components/Dashboard';
 import LoadingSlip from './components/LoadingSlip';
 import Memo from './components/Memo';
