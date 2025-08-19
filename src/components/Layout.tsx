@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileText, Receipt, CreditCard } from 'lucide-react';
-import { ConnectionStatus } from './ConnectionStatus';
+import ConnectionStatus from './ConnectionStatus';
 
 interface LayoutProps {
   children: React.ReactNode;
