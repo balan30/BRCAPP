@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Edit, Download, Receipt, CreditCard, Search, Eye } from 'lucide-react';
+import { Plus, FileText, Edit, Download, Receipt, CreditCard, Search, Eye, Trash2 } from 'lucide-react';
 import { generateSlipNumber, formatCurrency } from '../utils/numberGenerator';
+import { useData } from '../context/DataContext';
 import LoadingSlipForm from './forms/LoadingSlipForm';
 import MemoForm from './forms/MemoForm';
 import BillForm from './forms/BillForm';
@@ -9,14 +10,16 @@ import LoadingSlipView from './views/LoadingSlipView';
 import type { LoadingSlip } from '../types';
 
 const LoadingSlipComponent: React.FC = () => {
+  const { loadingSlips, setLoadingSlips } = useData();
+  
   const [showForm, setShowForm] = useState(false);
   const [editingSlip, setEditingSlip] = useState<LoadingSlip | null>(null);
-  const [loadingSlips, setLoadingSlips] = useState<LoadingSlip[]>([]);
   const [showMemoForm, setShowMemoForm] = useState(false);
   const [showBillForm, setShowBillForm] = useState(false);
   const [selectedSlip, setSelectedSlip] = useState<LoadingSlip | null>(null);
   const [viewingSlip, setViewingSlip] = useState<LoadingSlip | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const handleCreateSlip = (slipData: Omit<LoadingSlip, 'id' | 'created_at' | 'updated_at'>) => {
     const newSlip: LoadingSlip = {
@@ -25,7 +28,7 @@ const LoadingSlipComponent: React.FC = () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    setLoadingSlips([newSlip, ...loadingSlips]);
+    setLoadingSlips(prev => [newSlip, ...prev]);
     setShowForm(false);
   };
 
@@ -42,11 +45,22 @@ const LoadingSlipComponent: React.FC = () => {
         created_at: editingSlip.created_at,
         updated_at: new Date().toISOString(),
       };
-      setLoadingSlips(loadingSlips.map(slip => 
+      setLoadingSlips(prev => prev.map(slip => 
         slip.id === editingSlip.id ? updatedSlip : slip
       ));
       setShowForm(false);
       setEditingSlip(null);
+    }
+  };
+
+  const handleDeleteSlip = (slipId: string) => {
+    if (deleteConfirm === slipId) {
+      setLoadingSlips(prev => prev.filter(slip => slip.id !== slipId));
+      setDeleteConfirm(null);
+    } else {
+      setDeleteConfirm(slipId);
+      // Auto-cancel delete confirmation after 3 seconds
+      setTimeout(() => setDeleteConfirm(null), 3000);
     }
   };
 
@@ -236,6 +250,13 @@ const LoadingSlipComponent: React.FC = () => {
                           title="Edit Loading Slip"
                         >
                           <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSlip(slip.id)}
+                          className={`${deleteConfirm === slip.id ? 'text-red-800 bg-red-100' : 'text-red-600 hover:text-red-800'} p-1 rounded`}
+                          title={deleteConfirm === slip.id ? 'Click again to confirm delete' : 'Delete Loading Slip'}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDownloadPDF(slip)}

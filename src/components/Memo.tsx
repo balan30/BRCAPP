@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
-import { Plus, Receipt, Edit, Download, FileText, Search, Eye } from 'lucide-react';
+import { Plus, Receipt, Edit, Download, FileText, Search, Eye, Trash2, CheckCircle } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
+import { useData } from '../context/DataContext';
 import MemoForm from './forms/MemoForm';
 import MemoView from './views/MemoView';
 import { generateMemoPDF } from '../utils/pdfGenerator';
 import type { Memo } from '../types';
 
 const MemoComponent: React.FC = () => {
-  const [memos, setMemos] = useState<Memo[]>([]);
+  const { memos, setMemos } = useData();
+  
   const [showForm, setShowForm] = useState(false);
   const [editingMemo, setEditingMemo] = useState<Memo | null>(null);
   const [viewingMemo, setViewingMemo] = useState<Memo | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'pending' | 'paid'>('pending');
 
   const handleCreateMemo = (memoData: Omit<Memo, 'id' | 'created_at' | 'updated_at'>) => {
     const newMemo: Memo = {
       ...memoData,
+      is_paid: false,
       id: Date.now().toString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    setMemos([newMemo, ...memos]);
+    setMemos(prev => [newMemo, ...prev]);
     setShowForm(false);
   };
 
@@ -37,12 +42,33 @@ const MemoComponent: React.FC = () => {
         created_at: editingMemo.created_at,
         updated_at: new Date().toISOString(),
       };
-      setMemos(memos.map(memo => 
+      setMemos(prev => prev.map(memo => 
         memo.id === editingMemo.id ? updatedMemo : memo
       ));
       setShowForm(false);
       setEditingMemo(null);
     }
+  };
+
+  const handleDeleteMemo = (memoId: string) => {
+    if (deleteConfirm === memoId) {
+      setMemos(prev => prev.filter(memo => memo.id !== memoId));
+      setDeleteConfirm(null);
+    } else {
+      setDeleteConfirm(memoId);
+      setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+  };
+
+  const handleMarkAsPaid = (memo: Memo) => {
+    const updatedMemo: Memo = {
+      ...memo,
+      is_paid: true,
+      payment_date: new Date().toISOString(),
+      payment_amount: memo.net_amount,
+      updated_at: new Date().toISOString(),
+    };
+    setMemos(prev => prev.map(m => m.id === memo.id ? updatedMemo : m));
   };
 
   const handleDownloadPDF = async (memo: Memo) => {
@@ -53,15 +79,41 @@ const MemoComponent: React.FC = () => {
     setViewingMemo(memo);
   };
 
-  const filteredMemos = memos.filter(memo =>
-    memo.memo_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    memo.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMemos = memos
+    .filter(memo => activeTab === 'pending' ? !memo.is_paid : memo.is_paid)
+    .filter(memo =>
+      memo.memo_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      memo.supplier.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Memo</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Memo</h1>
+          <div className="flex space-x-4 mt-2">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                activeTab === 'pending'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Pending Memos ({memos.filter(m => !m.is_paid).length})
+            </button>
+            <button
+              onClick={() => setActiveTab('paid')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                activeTab === 'paid'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Paid Memos ({memos.filter(m => m.is_paid).length})
+            </button>
+          </div>
+        </div>
         <button
           onClick={() => setShowForm(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"

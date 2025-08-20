@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { Upload, Search, FileImage, Download } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 const PODComponent: React.FC = () => {
+  const { bills } = useData();
+  
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Get all bills with POD images
+  const billsWithPOD = bills.filter(bill => bill.pod_image);
+  
+  const filteredPODs = billsWithPOD.filter(bill =>
+    bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    bill.party.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -39,11 +50,33 @@ const PODComponent: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">POD Images</h3>
         </div>
         <div className="p-6">
-          <div className="text-center text-gray-500 py-12">
-            <FileImage className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No POD images found</p>
-            <p className="text-sm">Upload POD images to attach with bills</p>
-          </div>
+          {filteredPODs.length === 0 ? (
+            <div className="text-center text-gray-500 py-12">
+              <FileImage className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No POD images found</p>
+              <p className="text-sm">Upload POD images to attach with bills</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPODs.map((bill) => (
+                <div key={bill.id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-900">{bill.bill_number}</h4>
+                    <button className="text-blue-600 hover:text-blue-800">
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{bill.party}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(bill.date).toLocaleDateString('en-IN')}
+                  </p>
+                  <div className="mt-3 bg-gray-200 rounded-lg h-32 flex items-center justify-center">
+                    <FileImage className="w-8 h-8 text-gray-400" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

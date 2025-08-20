@@ -32,6 +32,9 @@ export interface Memo {
   rto: number;
   net_amount: number;
   advance_payments: AdvancePayment[];
+  is_paid: boolean;
+  payment_date?: string;
+  payment_amount?: number;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +51,9 @@ export interface Bill {
   penalties: number;
   net_amount: number;
   pod_image?: string;
+  is_received: boolean;
+  receipt_date?: string;
+  receipt_amount?: number;
   created_at: string;
   updated_at: string;
 }

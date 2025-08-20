@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Plus, CreditCard, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { Plus, CreditCard, TrendingUp, TrendingDown, Calendar, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
+import { useData } from '../context/DataContext';
 import BankingForm from './forms/BankingForm';
 import type { BankingEntry } from '../types';
 
 const BankingComponent: React.FC = () => {
-  const [entries, setEntries] = useState<BankingEntry[]>([]);
+  const { bankingEntries, setBankingEntries } = useData();
+  
   const [showForm, setShowForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const handleCreateEntry = (entryData: Omit<BankingEntry, 'id' | 'created_at'>) => {
     const newEntry: BankingEntry = {
@@ -14,15 +17,25 @@ const BankingComponent: React.FC = () => {
       id: Date.now().toString(),
       created_at: new Date().toISOString(),
     };
-    setEntries([newEntry, ...entries]);
+    setBankingEntries(prev => [newEntry, ...prev]);
     setShowForm(false);
   };
 
-  const totalCredits = entries
+  const handleDeleteEntry = (entryId: string) => {
+    if (deleteConfirm === entryId) {
+      setBankingEntries(prev => prev.filter(entry => entry.id !== entryId));
+      setDeleteConfirm(null);
+    } else {
+      setDeleteConfirm(entryId);
+      setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+  };
+
+  const totalCredits = bankingEntries
     .filter(entry => entry.type === 'credit')
     .reduce((sum, entry) => sum + entry.amount, 0);
 
-  const totalDebits = entries
+  const totalDebits = bankingEntries
     .filter(entry => entry.type === 'debit')
     .reduce((sum, entry) => sum + entry.amount, 0);
 

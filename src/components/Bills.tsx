@@ -1,23 +1,28 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Edit, Download, Image } from 'lucide-react';
+import { Plus, FileText, Edit, Download, Image, Trash2, CheckCircle } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
+import { useData } from '../context/DataContext';
 import BillForm from './forms/BillForm';
 import { generateBillPDF } from '../utils/pdfGenerator';
 import type { Bill } from '../types';
 
 const BillsComponent: React.FC = () => {
-  const [bills, setBills] = useState<Bill[]>([]);
+  const { bills, setBills } = useData();
+  
   const [showForm, setShowForm] = useState(false);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'pending' | 'received'>('pending');
 
   const handleCreateBill = (billData: Omit<Bill, 'id' | 'created_at' | 'updated_at'>) => {
     const newBill: Bill = {
       ...billData,
+      is_received: false,
       id: Date.now().toString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    setBills([newBill, ...bills]);
+    setBills(prev => [newBill, ...prev]);
     setShowForm(false);
   };
 
@@ -34,7 +39,7 @@ const BillsComponent: React.FC = () => {
         created_at: editingBill.created_at,
         updated_at: new Date().toISOString(),
       };
-      setBills(bills.map(bill => 
+      setBills(prev => prev.map(bill => 
         bill.id === editingBill.id ? updatedBill : bill
       ));
       setShowForm(false);
@@ -42,14 +47,66 @@ const BillsComponent: React.FC = () => {
     }
   };
 
+  const handleDeleteBill = (billId: string) => {
+    if (deleteConfirm === billId) {
+      setBills(prev => prev.filter(bill => bill.id !== billId));
+      setDeleteConfirm(null);
+    } else {
+      setDeleteConfirm(billId);
+      setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+  };
+
+  const handleMarkAsReceived = (bill: Bill) => {
+    const updatedBill: Bill = {
+      ...bill,
+      is_received: true,
+      receipt_date: new Date().toISOString(),
+      receipt_amount: bill.net_amount,
+      updated_at: new Date().toISOString(),
+    };
+    setBills(prev => prev.map(b => b.id === bill.id ? updatedBill : b));
+  };
+
   const handleDownloadPDF = async (bill: Bill) => {
     await generateBillPDF(bill, bill.pod_image);
   };
 
+  const filteredBills = bills
+    .filter(bill => activeTab === 'pending' ? !bill.is_received : bill.is_received)
+    .filter(bill =>
+      bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bill.party.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Bills</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Bills</h1>
+          <div className="flex space-x-4 mt-2">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                activeTab === 'pending'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Pending Bills ({bills.filter(b => !b.is_received).length})
+            </button>
+            <button
+              onClick={() => setActiveTab('received')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                activeTab === 'received'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Received Bills ({bills.filter(b => b.is_received).length})
+            </button>
+          </div>
+        </div>
         <button
           onClick={() => setShowForm(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"

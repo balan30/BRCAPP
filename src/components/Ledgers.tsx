@@ -1,13 +1,58 @@
 import React, { useState } from 'react';
-import { Users, Truck, Building, Download, Eye, Edit } from 'lucide-react';
+import { Users, Truck, Building, Download, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
+import { useData } from '../context/DataContext';
+import { generateLedgerPDF } from '../utils/pdfGenerator';
 
 const LedgersComponent: React.FC = () => {
+  const { memos, bills, parties, suppliers } = useData();
+  
   const [activeTab, setActiveTab] = useState<'party' | 'supplier' | 'general'>('party');
 
+  // Calculate ledger data
+  const partyLedgers = parties.map(party => {
+    const partyBills = bills.filter(bill => bill.party === party.name);
+    const totalBills = partyBills.length;
+    const outstandingBalance = partyBills
+      .filter(bill => !bill.is_received)
+      .reduce((sum, bill) => sum + bill.net_amount, 0);
+    
+    return {
+      name: party.name,
+      totalBills,
+      entries: partyBills.length,
+      outstandingBalance,
+      createdAt: party.created_at,
+    };
+  });
+
+  const supplierLedgers = suppliers.map(supplier => {
+    const supplierMemos = memos.filter(memo => memo.supplier === supplier.name);
+    const totalMemos = supplierMemos.length;
+    const outstandingBalance = supplierMemos
+      .filter(memo => !memo.is_paid)
+      .reduce((sum, memo) => sum + memo.net_amount, 0);
+    
+    return {
+      name: supplier.name,
+      totalMemos,
+      entries: supplierMemos.length,
+      outstandingBalance,
+      createdAt: supplier.created_at,
+    };
+  });
+
+  const handleDownloadLedgerPDF = async (ledgerName: string, ledgerType: 'party' | 'supplier') => {
+    const entries = ledgerType === 'party' 
+      ? bills.filter(bill => bill.party === ledgerName)
+      : memos.filter(memo => memo.supplier === ledgerName);
+    
+    await generateLedgerPDF(ledgerName, ledgerType, entries);
+  };
+
   const tabs = [
-    { id: 'party', label: 'Party Ledgers', count: 1, icon: Users },
-    { id: 'supplier', label: 'Supplier Ledgers', count: 1, icon: Truck },
+    { id: 'party', label: 'Party Ledgers', count: partyLedgers.length, icon: Users },
+    { id: 'supplier', label: 'Supplier Ledgers', count: supplierLedgers.length, icon: Truck },
     { id: 'general', label: 'General Ledgers', count: 0, icon: Building },
   ];
 

@@ -1,77 +1,87 @@
 import React from 'react';
 import { TrendingUp, Users, Truck, DollarSign, FileText, Receipt } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
+import { useData } from '../context/DataContext';
 
 const Dashboard: React.FC = () => {
+  const { memos, bills, bankingEntries } = useData();
+  
+  // Calculate actual profit (total commission from all memos)
+  const totalProfit = memos.reduce((sum, memo) => sum + memo.commission, 0);
+  
+  // Calculate party balance (total outstanding from unpaid bills)
+  const partyBalance = bills
+    .filter(bill => !bill.is_received)
+    .reduce((sum, bill) => sum + bill.net_amount, 0);
+  
+  // Calculate supplier balance (total outstanding from unpaid memos)
+  const supplierBalance = memos
+    .filter(memo => !memo.is_paid)
+    .reduce((sum, memo) => sum + memo.net_amount, 0);
+  
+  // Calculate monthly revenue (current month bills)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const monthlyRevenue = bills
+    .filter(bill => {
+      const billDate = new Date(bill.date);
+      return billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear;
+    })
+    .reduce((sum, bill) => sum + bill.bill_amount, 0);
+  
   const stats = [
     {
       title: 'Total Profit (Actual Commission)',
-      value: 'Rs. 0',
+      value: formatCurrency(totalProfit),
       icon: TrendingUp,
       color: 'bg-green-50 text-green-700',
       iconBg: 'bg-green-100',
     },
     {
       title: 'Party Balance',
-      value: 'Rs. 0',
+      value: formatCurrency(partyBalance),
       icon: Users,
       color: 'bg-blue-50 text-blue-700',
       iconBg: 'bg-blue-100',
     },
     {
       title: 'Supplier Balance',
-      value: 'Rs. 0',
+      value: formatCurrency(supplierBalance),
       icon: Truck,
       color: 'bg-orange-50 text-orange-700',
       iconBg: 'bg-orange-100',
     },
     {
       title: 'Monthly Revenue',
-      value: 'Rs. 0',
+      value: formatCurrency(monthlyRevenue),
       icon: DollarSign,
       color: 'bg-purple-50 text-purple-700',
       iconBg: 'bg-purple-100',
     },
   ];
 
-  // Sample recent data - in real app, this would come from state/database
-  const recentBills = [
-    {
-      id: '1',
-      bill_number: 'BL25081001',
-      party: 'ABC Transport Ltd',
-      amount: 150000,
-      date: '2025-01-16',
-      status: 'Pending'
-    },
-    {
-      id: '2',
-      bill_number: 'BL25081002',
-      party: 'XYZ Logistics',
-      amount: 200000,
-      date: '2025-01-15',
-      status: 'Paid'
-    }
-  ];
+  // Get recent bills and memos from actual data
+  const recentBills = bills
+    .slice(0, 5)
+    .map(bill => ({
+      id: bill.id,
+      bill_number: bill.bill_number,
+      party: bill.party,
+      amount: bill.net_amount,
+      date: bill.date,
+      status: bill.is_received ? 'Received' : 'Pending'
+    }));
 
-  const recentMemos = [
-    {
-      id: '1',
-      memo_number: 'MO25081001',
-      supplier: 'Rajesh Transport',
-      amount: 140000,
-      date: '2025-01-16',
-      status: 'Pending'
-    },
-    {
-      id: '2',
-      memo_number: 'MO25081002',
-      supplier: 'Kumar Logistics',
-      amount: 180000,
-      date: '2025-01-15',
-      status: 'Paid'
-    }
-  ];
+  const recentMemos = memos
+    .slice(0, 5)
+    .map(memo => ({
+      id: memo.id,
+      memo_number: memo.memo_number,
+      supplier: memo.supplier,
+      amount: memo.net_amount,
+      date: memo.date,
+      status: memo.is_paid ? 'Paid' : 'Pending'
+    }));
 
   return (
     <div className="space-y-6">

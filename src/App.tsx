@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Layout } from './components/Layout';
+import { DataProvider } from './context/DataContext';
 import Dashboard from './components/Dashboard';
 import LoadingSlip from './components/LoadingSlip';
 import Memo from './components/Memo';
@@ -48,19 +49,21 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
-        {renderCurrentPage()}
-      </Layout>
-      
-      {showLedgerDetail && (
-        <LedgerDetail
-          ledgerName={showLedgerDetail.name}
-          ledgerType={showLedgerDetail.type}
-          onClose={() => setShowLedgerDetail(null)}
-        />
-      )}
-    </div>
+    <DataProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
+          {renderCurrentPage()}
+        </Layout>
+        
+        {showLedgerDetail && (
+          <LedgerDetail
+            ledgerName={showLedgerDetail.name}
+            ledgerType={showLedgerDetail.type}
+            onClose={() => setShowLedgerDetail(null)}
+          />
+        )}
+      </div>
+    </DataProvider>
   );
 }
 

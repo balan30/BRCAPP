@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import { X, ChevronDown, Plus } from 'lucide-react';
 import { generateSlipNumber } from '../../utils/numberGenerator';
 import { formatCurrency } from '../../utils/numberGenerator';
+import { useData } from '../../context/DataContext';
+import PartyForm from './PartyForm';
+import SupplierForm from './SupplierForm';
 import type { LoadingSlip } from '../../types';
 
 interface LoadingSlipFormProps {
@@ -11,31 +14,15 @@ interface LoadingSlipFormProps {
 }
 
 const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit, onCancel }) => {
+  const { parties, suppliers, setParties, setSuppliers, loadingSlips } = useData();
+  
+  const [showPartyForm, setShowPartyForm] = useState(false);
+  const [showSupplierForm, setShowSupplierForm] = useState(false);
+  
   // Sample data for autocomplete - in real app, this would come from database
-  const [parties] = useState([
-    'VINAYAKA TRANS SOLUTION', 
-    'PERFECT CARGO MOVERS', 
-    'BRC INFRA', 
-    'ABC LOGISTICS', 
-    'XYZ TRANSPORT',
-    'MAHINDRA LOGISTICS',
-    'BLUE DART EXPRESS',
-    'GATI LIMITED',
-    'VRL LOGISTICS',
-    'TCI EXPRESS'
-  ]);
-  const [suppliers] = useState([
-    'RAJESH TRANSPORT', 
-    'KUMAR LOGISTICS', 
-    'SHAH CARRIERS', 
-    'PATEL TRANSPORT',
-    'SINGH CARRIERS',
-    'GUPTA LOGISTICS',
-    'SHARMA TRANSPORT',
-    'VERMA CARRIERS',
-    'AGARWAL LOGISTICS',
-    'JAIN TRANSPORT'
-  ]);
+  const partyNames = parties.map(p => p.name);
+  const supplierNames = suppliers.map(s => s.name);
+  
   const [vehicles] = useState([
     'GJ27TG5772', 
     'DD01S9823', 
@@ -54,7 +41,7 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false);
   
   const [formData, setFormData] = useState({
-    slip_number: generateSlipNumber(),
+    slip_number: initialData?.slip_number || generateSlipNumber(),
     date: new Date().toISOString().split('T')[0],
     party: '',
     vehicle_no: '',
@@ -67,6 +54,12 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
     advance: 0,
     rto: 0,
   });
+
+  // Validate slip number uniqueness
+  const validateSlipNumber = (number: string) => {
+    const existingNumbers = loadingSlips.map(slip => slip.slip_number);
+    return !existingNumbers.includes(number) || number === initialData?.slip_number;
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -89,6 +82,13 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate slip number
+    if (!validateSlipNumber(formData.slip_number)) {
+      alert('Slip number already exists. Please use a different number.');
+      return;
+    }
+    
     const balance = formData.freight - formData.advance;
     const total_freight = formData.freight + formData.rto;
     
@@ -122,11 +122,33 @@ const LoadingSlipForm: React.FC<LoadingSlipFormProps> = ({ initialData, onSubmit
     setShowVehicleDropdown(false);
   };
 
-  const filteredParties = parties.filter(party => 
+  const handleCreateParty = (partyData: { name: string; address?: string; contact?: string }) => {
+    const newParty = {
+      id: Date.now().toString(),
+      ...partyData,
+      created_at: new Date().toISOString(),
+    };
+    setParties(prev => [...prev, newParty]);
+    setFormData(prev => ({ ...prev, party: newParty.name }));
+    setShowPartyForm(false);
+  };
+
+  const handleCreateSupplier = (supplierData: { name: string; address?: string; contact?: string }) => {
+    const newSupplier = {
+      id: Date.now().toString(),
+      ...supplierData,
+      created_at: new Date().toISOString(),
+    };
+    setSuppliers(prev => [...prev, newSupplier]);
+    setFormData(prev => ({ ...prev, supplier: newSupplier.name }));
+    setShowSupplierForm(false);
+  };
+
+  const filteredParties = partyNames.filter(party => 
     party.toLowerCase().includes(formData.party.toLowerCase())
   );
 
-  const filteredSuppliers = suppliers.filter(supplier => 
+  const filteredSuppliers = supplierNames.filter(supplier => 
     supplier.toLowerCase().includes(formData.supplier.toLowerCase())
   );
 
