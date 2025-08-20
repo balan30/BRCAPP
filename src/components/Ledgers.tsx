@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Truck, Building, Download, Eye } from 'lucide-react';
+import { Users, Truck, Building, Download, Eye, Edit } from 'lucide-react';
 import { formatCurrency } from '../utils/numberGenerator';
 
 const LedgersComponent: React.FC = () => {
