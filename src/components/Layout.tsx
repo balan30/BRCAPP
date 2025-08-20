@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Receipt, CreditCard } from 'lucide-react';
+import { BarChart3, FileText, Receipt, CreditCard, Users, Building, CreditCard as Banking, BookOpen, FileImage } from 'lucide-react';
 import ConnectionStatus from './ConnectionStatus';
 
 interface LayoutProps {
@@ -10,9 +10,15 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigate }) => {
   const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'loading-slip', label: 'Loading Slip', icon: FileText },
     { id: 'memo', label: 'Memo', icon: Receipt },
     { id: 'bills', label: 'Bills', icon: CreditCard },
+    { id: 'party', label: 'Party', icon: Users },
+    { id: 'supplier', label: 'Supplier', icon: Building },
+    { id: 'banking', label: 'Banking', icon: Banking },
+    { id: 'ledgers', label: 'Ledgers', icon: BookOpen },
+    { id: 'pod', label: 'POD', icon: FileImage },
   ];
 
   return (
