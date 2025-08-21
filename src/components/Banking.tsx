@@ -135,10 +135,13 @@ const BankingComponent: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Narration
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {entries.map((entry) => (
+                {bankingEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center space-x-2">
@@ -173,6 +176,15 @@ const BankingComponent: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                       {entry.narration}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onClick={() => handleDeleteEntry(entry.id)}
+                        className={`${deleteConfirm === entry.id ? 'text-red-800 bg-red-100' : 'text-red-600 hover:text-red-800'} p-1 rounded`}
+                        title={deleteConfirm === entry.id ? 'Click again to confirm delete' : 'Delete Entry'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

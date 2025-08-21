@@ -8,6 +8,7 @@ const LedgersComponent: React.FC = () => {
   const { memos, bills, parties, suppliers } = useData();
   
   const [activeTab, setActiveTab] = useState<'party' | 'supplier' | 'general'>('party');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Calculate ledger data
   const partyLedgers = parties.map(party => {
@@ -49,6 +50,14 @@ const LedgersComponent: React.FC = () => {
     
     await generateLedgerPDF(ledgerName, ledgerType, entries);
   };
+
+  const filteredPartyLedgers = partyLedgers.filter(ledger =>
+    ledger.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredSupplierLedgers = supplierLedgers.filter(ledger =>
+    ledger.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const tabs = [
     { id: 'party', label: 'Party Ledgers', count: partyLedgers.length, icon: Users },
@@ -94,13 +103,45 @@ const LedgersComponent: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
+      {activeTab === 'party' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Party Outstanding</p>
+                <p className="text-2xl font-bold text-green-600 mt-2">
+                  {formatCurrency(partyLedgers.reduce((sum, ledger) => sum + ledger.outstandingBalance, 0))}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Party Ledgers</p>
+                <p className="text-2xl font-bold text-blue-600 mt-2">{partyLedgers.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-blue-600">{partyLedgers.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'supplier' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Supplier Outstanding</p>
-                <p className="text-2xl font-bold text-orange-600 mt-2">Rs. 8,46,000</p>
+                <p className="text-2xl font-bold text-orange-600 mt-2">
+                  {formatCurrency(supplierLedgers.reduce((sum, ledger) => sum + ledger.outstandingBalance, 0))}
+                </p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <Truck className="w-6 h-6 text-orange-600" />
@@ -112,10 +153,10 @@ const LedgersComponent: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Supplier Ledgers</p>
-                <p className="text-2xl font-bold text-red-600 mt-2">1</p>
+                <p className="text-2xl font-bold text-red-600 mt-2">{supplierLedgers.length}</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-red-600">1</span>
+                <span className="text-2xl font-bold text-red-600">{supplierLedgers.length}</span>
               </div>
             </div>
           </div>
@@ -129,6 +170,8 @@ const LedgersComponent: React.FC = () => {
           <input
             type="text"
             placeholder={`Search ${activeTab} ledgers...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           </div>
@@ -172,62 +215,80 @@ const LedgersComponent: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {activeTab === 'supplier' && (
-                <tr className="hover:bg-gray-50">
+              {activeTab === 'party' && filteredPartyLedgers.map((ledger) => (
+                <tr key={ledger.name} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">fcscf</div>
-                      <div className="text-sm text-gray-500">Created: 16/08/2025</div>
+                      <div className="text-sm font-medium text-gray-900">{ledger.name}</div>
+                      <div className="text-sm text-gray-500">Created: {new Date(ledger.createdAt).toLocaleDateString('en-IN')}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">1</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
-                    Rs. 8,46,000
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-800">
-                        <Download className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {activeTab === 'party' && (
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">csdcd</div>
-                      <div className="text-sm text-gray-500">Created: 16/08/2025</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">1</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">1</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ledger.totalBills}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ledger.entries}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                    Rs. 9,00,000
+                    {formatCurrency(ledger.outstandingBalance)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-800">
+                      <button 
+                        onClick={() => handleDownloadLedgerPDF(ledger.name, 'party')}
+                        className="text-green-600 hover:text-green-800"
+                      >
                         <Download className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
                 </tr>
-              )}
+              ))}
+              {activeTab === 'supplier' && filteredSupplierLedgers.map((ledger) => (
+                <tr key={ledger.name} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{ledger.name}</div>
+                      <div className="text-sm text-gray-500">Created: {new Date(ledger.createdAt).toLocaleDateString('en-IN')}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ledger.totalMemos}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ledger.entries}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
+                    {formatCurrency(ledger.outstandingBalance)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => handleDownloadLedgerPDF(ledger.name, 'supplier')}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
               {activeTab === 'general' && (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                     <Building className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p>No general ledgers found</p>
                     <p className="text-sm">General ledgers will appear here for your own vehicles</p>
+                  </td>
+                </tr>
+              )}
+              {activeTab === 'party' && filteredPartyLedgers.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No party ledgers found</p>
+                    <p className="text-sm">Add parties to see their ledgers</p>
+                  </td>
+                </tr>
+              )}
+              {activeTab === 'supplier' && filteredSupplierLedgers.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    <Truck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No supplier ledgers found</p>
+                    <p className="text-sm">Add suppliers to see their ledgers</p>
                   </td>
                 </tr>
               )}
