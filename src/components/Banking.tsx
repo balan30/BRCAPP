@@ -107,7 +107,7 @@ const BankingComponent: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">Banking Entries</h3>
         </div>
         <div className="overflow-x-auto">
-          {entries.length === 0 ? (
+          {bankingEntries.length === 0 ? (
             <div className="text-center text-gray-500 py-12">
               <CreditCard className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No banking entries found</p>
